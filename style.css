@@ -1,0 +1,29 @@
+.form {
+    text-align: right;
+    width: 230px;
+}
+
+.center {
+    text-align: center;
+}
+
+table {
+    margin-top: 20px;
+    border-collapse: collapse;
+}
+
+table thead {
+    color: white;
+    background-color: rgb(126, 126, 126);
+}
+
+table td {
+    height: 30px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+#idGame{
+    background-color: rgb(252, 252, 252);
+    color: darkgray;
+}

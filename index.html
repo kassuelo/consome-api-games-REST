@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <title>Loja de games</title>
+</head>
+
+<body onload="refreshGameList();">
+    <hr>
+    <h4>Lista de Games</h4>
+    <a href="#" onclick="refreshGameList();">Atualizar lista</a>
+    <table>
+        <thead>
+            <tr>
+                <th>Título</th>
+                <th>Ano</th>
+                <th>Preço</th>
+                <th>Editar</th>
+                <th>Deletar</th>
+            </tr>
+        </thead>
+        <tbody id="games">
+
+        </tbody>
+    </table>
+    <hr>
+    <h4>Cadastrar jogos</h4>
+    <form id="form_cadastro" class="form">
+        <p>Título: <input name="title" id="title"></p>
+        <p>Preço: <input type="number" name="price" id="price"></p>
+        <p>Ano: <input type="number" name="year" id="year"></p>
+        <div class="center">
+            <button type="button" onclick="createGame()">cadastrar</button>
+            <button type="reset">limpar</button>
+        </div>
+    </form>
+    <hr>
+    <h4>Editar jogos</h4>
+    <form id="form_editar" class="form">
+        <p>Id: <input name="idGame" id="idGame" readonly></p>
+        <p>Título: <input name="editTitle" id="editTitle"></p>
+        <p>Preço: <input type="number" name="editPrice" id="editPrice"></p>
+        <p>Ano: <input type="number" name="editYear" id="editYear"></p>
+        <div class="center">
+            <button type="button" onclick="editGame()">salvar</button>
+            <button type="reset">limpar</button>
+        </div>
+    </form>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+
+    function createGame() {
+        var titleInput = document.getElementById("title");
+        var yearInput = document.getElementById("year");
+        var priceInput = document.getElementById("price");
+
+        var game = {
+            title: titleInput.value,
+            year: yearInput.value,
+            price: priceInput.value
+        }
+
+        axios.post("http://localhost:45678/game", game).then(response => {
+            if (response.status == 201) {
+                var message = document.createTextNode(`${game.title} cadastrado com sucesso.`);
+                var p = document.createElement("p");
+                p.appendChild(message);
+                p.setAttribute("id", "aviso");
+                var form = document.getElementById("form_cadastro");
+                form.appendChild(p);
+                setTimeout(function () { 
+                    form.removeChild(p); 
+                    form.reset();
+                }, 2000);
+
+            }
+        }).catch(err => {
+            console.log(err);
+        });
+
+    }
+    function editGame() {
+        var idGame = document.getElementById("idGame").value;
+        var titleInput = document.getElementById("editTitle");
+        var yearInput = document.getElementById("editYear");
+        var priceInput = document.getElementById("editPrice");
+
+        var game = {
+            title: titleInput.value,
+            year: yearInput.value,
+            price: priceInput.value
+        }
+
+        axios.put("http://localhost:45678/game/"+idGame, game).then(response => {
+            if (response.status == 200) {
+                var message = document.createTextNode(`${game.title} alterado com sucesso.`);
+                var p = document.createElement("p");
+                p.appendChild(message);
+                p.setAttribute("id", "avisoEditado");
+                var form = document.getElementById("form_editar");
+                form.appendChild(p);
+                setTimeout(function () { 
+                    form.removeChild(p);
+                    form.reset();
+                 }, 2000);
+
+            }
+        }).catch(err => {
+            console.log(err);
+        });
+
+    }
+    function deleteGame(listItem){
+        var id = listItem.getAttribute("data-id");
+        axios.delete("http://localhost:45678/game/"+id).then(response =>{
+            alert("game deletado!");
+        }).catch(err => {
+            console.log("erro");
+        });
+    }
+
+    function loadForm(listItem){
+        var id = listItem.getAttribute("data-id");
+        axios.get("http://localhost:45678/game/"+id).then(response =>{
+            var game = response.data;
+            document.getElementById("idGame").value = game.id;
+            document.getElementById("editTitle").value = game.title;
+            document.getElementById("editYear").value = game.year;
+            document.getElementById("editPrice").value = game.price;
+        }).catch(err => {
+            console.log("erro");
+        });
+    }
+
+    function refreshGameList() {
+        axios.get("http://localhost:45678/games").then(response => {
+            var games = response.data;
+            var list = document.getElementById("games");
+            while (list.firstChild) {
+                list.removeChild(list.lastChild);
+            }
+            games.forEach(game => {
+                var item = document.createElement("tr");
+
+                item.setAttribute("data-id", game.id);
+                // item.setAttribute("data-title", game.title);
+                // item.setAttribute("data-price", game.price);
+                // item.setAttribute("data-year", game.year);
+
+                var textTitle = document.createTextNode(game.title);
+                var textYear = document.createTextNode(game.year);
+                var textPrice = document.createTextNode(game.price);
+                var textEditBtn = document.createTextNode("editar");
+                var textDeleteBtn = document.createTextNode("deletar");
+
+                var titleCell = document.createElement("td");
+                var yearCell = document.createElement("td");
+                var priceCell = document.createElement("td");
+                var editCell = document.createElement("td");
+                var deleteCell = document.createElement("td");
+
+                var editBtn = document.createElement("button");
+                var deleteBtn = document.createElement("button");
+                editBtn.appendChild(textEditBtn);
+                deleteBtn.appendChild(textDeleteBtn);
+                deleteBtn.addEventListener("click", function(){
+                    deleteGame(item);
+                });
+                editBtn.addEventListener("click", function(){
+                    loadForm(item);
+                });
+
+                titleCell.appendChild(textTitle);
+                yearCell.appendChild(textYear);
+                priceCell.appendChild(textPrice);
+                editCell.appendChild(editBtn);
+                deleteCell.appendChild(deleteBtn);
+
+                item.appendChild(titleCell);
+                item.appendChild(yearCell);
+                item.appendChild(priceCell);
+                item.appendChild(editCell);
+                item.appendChild(deleteCell);
+
+                list.appendChild(item);
+
+            });
+
+        }).catch(error => {
+            console.log(error);
+        });
+    }
+</script>
+
+</html>
